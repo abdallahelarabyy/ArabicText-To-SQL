@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SQL Query Generator</title>
+    <style>
+      :root {
+        --primary: #4361ee;
+        --primary-dark: #3a56d4;
+        --secondary: #7209b7;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --success: #38b000;
+        --error: #d90429;
+        --gray-100: #f8f9fa;
+        --gray-200: #e9ecef;
+        --gray-300: #dee2e6;
+        --gray-400: #ced4da;
+        --gray-500: #adb5bd;
+        --gray-800: #343a40;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f0f2f5;
+        color: var(--dark);
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gray-300);
+      }
+
+      .logo {
+        margin-right: 1rem;
+        font-size: 1.8rem;
+        color: var(--primary);
+      }
+
+      .title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--dark);
+      }
+
+      .card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--gray-800);
+      }
+
+      textarea,
+      input,
+      select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 1rem;
+        transition: border-color 0.3s, box-shadow 0.3s;
+      }
+
+      textarea:focus,
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 100px;
+      }
+
+      .btn {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.15s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .btn:hover {
+        background-color: var(--primary-dark);
+      }
+
+      .btn:active {
+        transform: scale(0.98);
+      }
+
+      .btn-icon {
+        margin-right: 0.5rem;
+      }
+
+      .result-section {
+        margin-top: 2rem;
+      }
+
+      .result-title {
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        display: flex;
+        align-items: center;
+      }
+
+      .result-title-icon {
+        margin-right: 0.5rem;
+        color: var(--primary);
+      }
+
+      .result-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+
+      .result-header {
+        background-color: var(--gray-100);
+        padding: 1rem;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .result-heading {
+        font-weight: 600;
+        color: var(--gray-800);
+        display: flex;
+        align-items: center;
+      }
+
+      .result-heading-icon {
+        margin-right: 0.5rem;
+        color: var(--primary);
+      }
+
+      .result-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .action-btn {
+        background: none;
+        border: none;
+        color: var(--gray-500);
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 4px;
+        transition: color 0.3s, background-color 0.3s;
+      }
+
+      .action-btn:hover {
+        color: var(--primary);
+        background-color: var(--gray-100);
+      }
+
+      .result-content {
+        padding: 1.5rem;
+        background-color: var(--light);
+        overflow-x: auto;
+        min-height: 120px;
+      }
+
+      .sql-code {
+        font-family: "Consolas", "Monaco", monospace;
+        line-height: 1.5;
+        color: var(--dark);
+        padding: 0.5rem;
+        margin: 0;
+      }
+
+      .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        color: var(--gray-500);
+        font-style: italic;
+      }
+
+      .loading-spinner {
+        margin-right: 0.5rem;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 3rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--gray-300);
+        color: var(--gray-500);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 1rem;
+        }
+
+        .card,
+        .result-card {
+          padding: 1.5rem;
+        }
+        /* Evaluation Section Styles */
+        .evaluation-section {
+          margin-top: 2rem;
+          background-color: #f8f9fa;
+          border-radius: 10px;
+          padding: 1.5rem;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .evaluation-container h2 {
+          color: #3a539b;
+          margin-bottom: 1rem;
+          text-align: center;
+        }
+
+        .metrics-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+          background-color: white;
+          border-radius: 8px;
+          padding: 1rem;
+          text-align: center;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-card h3 {
+          font-size: 1rem;
+          color: #555;
+          margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+          font-size: 1.5rem;
+          font-weight: bold;
+          color: #3a539b;
+        }
+
+        .evaluation-actions {
+          display: flex;
+          justify-content: center;
+        }
+
+        #run-evaluation-btn {
+          background-color: #3a539b;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          padding: 0.5rem 1rem;
+          cursor: pointer;
+          font-size: 1rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        #run-evaluation-btn:hover {
+          background-color: #2c3e50;
+        }
+
+        @media (max-width: 768px) {
+          .metrics-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <div class="logo">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"></path>
+            <path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4"></path>
+            <path d="M3 9a27.06 27.06 0 0 0 18 0"></path>
+          </svg>
+        </div>
+        <h1 class="title">SQL Query Generator</h1>
+      </header>
+
+      <div class="card">
+        <div class="form-group">
+          <label for="question">Question:</label>
+          <textarea
+            id="question"
+            rows="3"
+            placeholder="Ask your database question..."
+          ></textarea>
+        </div>
+
+        <button class="btn" onclick="generateSQL()">
+          <span class="btn-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+          </span>
+          Generate SQL
+        </button>
+      </div>
+
+      <div class="result-section">
+        <h2 class="result-title">
+          <span class="result-title-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              ></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </span>
+          Generated SQL Query
+        </h2>
+
+        <div id="loading" class="loading hidden">
+          <span class="loading-spinner">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+            </svg>
+          </span>
+          Generating SQL query...
+        </div>
+
+        <div class="result-card">
+          <div class="result-header">
+            <div class="result-heading">
+              <span class="result-heading-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+                  ></path>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+              </span>
+              Output
+            </div>
+            <div class="result-actions">
+              <button
+                class="action-btn"
+                id="copy-btn"
+                title="Copy to clipboard"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path
+                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="result-content">
+            <pre class="sql-code" id="result">
+Your SQL query will appear here...</pre
+            >
+          </div>
+        </div>
+      </div>
+      <!-- <section class="evaluation-section" id="evaluation-section">
+        <div class="evaluation-container">
+          <h2>تقييم الأداء</h2>
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <h3>دقة التنفيذ</h3>
+              <div class="metric-value" id="execution-accuracy">-</div>
+            </div>
+            <div class="metric-card">
+              <h3>التطابق الدلالي</h3>
+              <div class="metric-value" id="semantic-similarity">-</div>
+            </div>
+            <div class="metric-card">
+              <h3>وقت الاستجابة</h3>
+              <div class="metric-value" id="response-time">-</div>
+            </div>
+            <div class="metric-card">
+              <h3>معدل التطابق</h3>
+              <div class="metric-value" id="exact-match">-</div>
+            </div>
+          </div>
+          <div class="evaluation-actions">
+            <button id="run-evaluation-btn" type="button">
+              <i class="fas fa-chart-line"></i>
+              تقييم الأداء
+            </button>
+          </div>
+        </div>
+      </section> -->
+
+      <footer class="footer">
+        <p>SQL Query Generator &copy; 2025</p>
+      </footer>
+    </div>
+
+    <script>
+      
+      async function generateSQL() {
+        const question = document.getElementById("question").value;
+        const resultElement = document.getElementById("result");
+        const loadingDiv = document.getElementById("loading");
+
+        // Show loading indicator
+        loadingDiv.classList.remove("hidden");
+        resultElement.textContent = "Generating...";
+
+        try {
+          const response = await fetch("http://localhost:8000/query", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question }),
+          });
+
+          const data = await response.json();
+
+          // Hide loading indicator and update result
+          loadingDiv.classList.add("hidden");
+          resultElement.textContent = data.sql_query;
+        } catch (error) {
+          // Hide loading indicator and show error
+          loadingDiv.classList.add("hidden");
+          resultElement.textContent = `Error: ${error.message}`;
+        }
+      }
+
+      // Copy to clipboard functionality
+      document
+        .getElementById("copy-btn")
+        .addEventListener("click", function () {
+          const sqlResult = document.getElementById("result");
+          const textToCopy = sqlResult.textContent;
+
+          navigator.clipboard
+            .writeText(textToCopy)
+            .then(
+              function () {
+                // Show temporary success message
+                const originalInnerHTML = this.innerHTML;
+                this.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+        `;
+
+                setTimeout(() => {
+                  this.innerHTML = originalInnerHTML;
+                }, 2000);
+              }.bind(this)
+            )
+            .catch(function (err) {
+              console.error("Could not copy text: ", err);
+            });
+        });
+    </script>
+  </body>
+</html>
